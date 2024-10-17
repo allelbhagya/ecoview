@@ -1,0 +1,2 @@
+- text summarization to 3-4 lines just below article title in main page
+- tags for most used words / importance

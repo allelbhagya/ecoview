@@ -3,11 +3,42 @@ import os
 import csv
 import requests
 from bs4 import BeautifulSoup
+from collections import Counter
+import nltk
+from nltk.corpus import stopwords
+from nltk import ngrams
+import re
 
 app = Flask(__name__)
 
 TEXT_DIR = 'text'
 os.makedirs(TEXT_DIR, exist_ok=True)
+
+nltk.download('stopwords')
+stop_words = set(stopwords.words('english'))
+
+@app.route('/search/<word>')
+def search_word(word):
+    word = word.lower()
+    matching_articles = []
+    word_regex = re.escape(word)
+    word_regex = re.sub(r"\\s+", r"\\s+", word_regex)
+    word_regex = word_regex.replace(r"'", r"'?")
+    regex_pattern = re.compile(r'\b' + word_regex + r'\b', re.IGNORECASE)
+
+    for filename in os.listdir(TEXT_DIR):
+        with open(os.path.join(TEXT_DIR, filename), 'r', encoding='utf-8') as f:
+            title = f.readline().strip()
+            f.readline()
+            content = f.read().lower()
+
+            if regex_pattern.search(content):
+                matching_articles.append({
+                    'title': title,
+                    'file_name': filename
+                })
+
+    return render_template('search_result.html', word=word, articles=matching_articles)
 
 def scrape_and_save_text(url, file_name):
     try:
@@ -44,19 +75,61 @@ def index():
             
             articles.append({'title': title, 'file_name': file_name})
     
-    return render_template('index.html', articles=articles)
+    top_words_phrases = get_top_words_and_phrases()
+    
+    return render_template('index.html', articles=articles, top_words_phrases=top_words_phrases)
+
+@app.route('/articles')
+def articles():
+    articles_list = []
+    with open('websites.csv', 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            url = row['URL']
+            file_name = url.replace('https://', '').replace('http://', '').replace('/', '_') + '.txt'
+            
+            if not os.path.exists(os.path.join(TEXT_DIR, file_name)):
+                scrape_and_save_text(url, file_name)
+            
+            with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
+                title = f.readline().strip() 
+            
+            articles_list.append({'title': title, 'file_name': file_name})
+    
+    return render_template('articles.html', articles=articles_list)
 
 @app.route('/article/<file_name>')
 def article(file_name):
     try:
         with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
             title = f.readline().strip()
-            f.readline() 
+            f.readline()
             content = f.read()
         
         return render_template('article.html', title=title, content=content)
     except FileNotFoundError:
         abort(404)
+
+def load_and_process_text():
+    combined_text = ""
+    for filename in os.listdir(TEXT_DIR):
+        with open(os.path.join(TEXT_DIR, filename), 'r', encoding='utf-8') as f:
+            f.readline()
+            f.readline()
+            combined_text += f.read() + " "
+    return combined_text
+
+def get_top_words_and_phrases(n=30):
+    text = load_and_process_text()
+    text = re.sub(r'[^A-Za-z\s]', '', text)
+    words = [word.lower() for word in text.split() if word.lower() not in stop_words]
+    word_counts = Counter(words)
+    bigram_counts = Counter(ngrams(words, 2))
+    top_single_words = word_counts.most_common(n)
+    top_bigrams = bigram_counts.most_common(n)
+    top_words_phrases = [(' '.join(bigram), count) for bigram, count in top_bigrams]
+    top_words_phrases = sorted(top_words_phrases, key=lambda x: x[1], reverse=True)[:n]
+    return top_words_phrases
 
 if __name__ == '__main__':
     app.run(debug=True)

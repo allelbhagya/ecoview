@@ -3,17 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Change</title>
+    <title>Climate Change Articles</title>
+    <style>
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-size: 1.15em;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .word-cloud {
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .word-cloud a {
+            text-decoration: none;
+            color: #00796b;
+            display: inline-block;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        .word-cloud a:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
-    <h1>Articles</h1>
-    <ul>
-        {% for article in articles %}
-        <br>
-            <li>
-                <a href="{{ url_for('article', file_name=article['file_name']) }}">{{ article['title'] }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <div class="content-wrapper">
+        <div class="word-cloud">
+            {% for word, frequency in top_words_phrases %}
+            <a href="{{ url_for('search_word', word=word) }}" 
+               style="font-size: {{ 10 + frequency * 1.2 }}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
+                {{ word }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
 </body>
 </html>

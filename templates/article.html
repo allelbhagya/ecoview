@@ -4,10 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
+    <style>
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: cornflowerblue;
+            font-size: 2em;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 1.2em;
+            line-height: 1.5;
+        }
+    </style>
 </head>
 <body>
-    <h1>{{ title }}</h1>
-    <pre>{{ content }}</pre>
-    <a href="{{ url_for('index') }}">Back to Home</a>
+    <div class="content-wrapper">
+        <h1>{{ title }}</h1>
+        <pre>{{ content }}</pre>
+        <a href="{{ url_for('index') }}">Back to Home</a>
+    </div>
 </body>
 </html>

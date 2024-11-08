@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Words and Phrases</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+    <style>
+        body {
+            padding: 2rem;
+        }
+        h1 {
+            text-align: center;
+        }
+        .word-table {
+            width: 100%;
+            margin: 2rem 0;
+        }
+        .word-table th, .word-table td {
+            text-align: left;
+            padding: 0.5rem;
+        }
+        .word-table th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Top 30 Words and Phrases</h1>
+
+    <table class="word-table">
+        <thead>
+            <tr>
+                <th>Word/Phrase</th>
+                <th>Frequency</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for word, frequency in top_words_phrases %}
+            <tr>
+                <td>{{ word }}</td>
+                <td>{{ frequency }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p><a href="{{ url_for('index') }}">Back to Home</a></p>
+</body>
+</html>

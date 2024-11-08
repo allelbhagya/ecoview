@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Change Articles</title>
+    <title>ecoview</title>
     <style>
         .content-wrapper {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             font-size: 1.15em;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
         ul {
             list-style: none;
@@ -45,7 +46,7 @@
         <div class="word-cloud">
             {% for word, frequency in top_words_phrases %}
             <a href="{{ url_for('search_word', word=word) }}" 
-               style="font-size: {{ 10 + frequency * 1.2 }}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
+               style="font-size: {{(frequency * 1.2 )*0.7}}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
                 {{ word }}
             </a>
             {% endfor %}

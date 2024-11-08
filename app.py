@@ -17,6 +17,9 @@ os.makedirs(TEXT_DIR, exist_ok=True)
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
+custom_stop_words = {"would", "use", "should", "could","also"}
+stop_words.update(custom_stop_words)
+
 @app.route('/search/<word>')
 def search_word(word):
     word = word.lower()
@@ -122,14 +125,45 @@ def load_and_process_text():
 def get_top_words_and_phrases(n=30):
     text = load_and_process_text()
     text = re.sub(r'[^A-Za-z\s]', '', text)
-    words = [word.lower() for word in text.split() if word.lower() not in stop_words]
+    
+    words = [word.lower() for word in text.split() if word.lower() not in stop_words and len(word) > 1]
+
     word_counts = Counter(words)
     bigram_counts = Counter(ngrams(words, 2))
+    
     top_single_words = word_counts.most_common(n)
     top_bigrams = bigram_counts.most_common(n)
-    top_words_phrases = [(' '.join(bigram), count) for bigram, count in top_bigrams]
+    
+    top_words_phrases = []
+    
+    for word, _ in top_single_words:
+        if has_matching_articles(word):
+            top_words_phrases.append((word, word_counts[word]))
+    
+    for bigram, _ in top_bigrams:
+        bigram_str = ' '.join(bigram)
+        if has_matching_articles(bigram_str):
+            top_words_phrases.append((bigram_str, bigram_counts[bigram]))
+    
     top_words_phrases = sorted(top_words_phrases, key=lambda x: x[1], reverse=True)[:n]
+    
     return top_words_phrases
+
+def has_matching_articles(word):
+    word = word.lower()
+    word_regex = re.escape(word)
+    word_regex = re.sub(r"\\s+", r"\\s+", word_regex)
+    word_regex = word_regex.replace(r"'", r"'?")
+    regex_pattern = re.compile(r'\b' + word_regex + r'\b', re.IGNORECASE)
+
+    for filename in os.listdir(TEXT_DIR):
+        with open(os.path.join(TEXT_DIR, filename), 'r', encoding='utf-8') as f:
+            f.readline()  
+            f.readline()  
+            content = f.read().lower()
+            if regex_pattern.search(content):
+                return True
+    return False
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -23,6 +23,11 @@
         .word-table th {
             background-color: #f4f4f4;
         }
+
+        .back a:hover {
+            text-decoration: none;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -45,6 +50,10 @@
         </tbody>
     </table>
 
-    <p><a href="{{ url_for('index') }}">Back to Home</a></p>
+    <p>
+        <div class="back">
+            <a href="{{ url_for('index') }}"> ← Back to Home</a></p>
+        </div>
+
 </body>
 </html>

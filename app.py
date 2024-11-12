@@ -53,12 +53,15 @@ def scrape_and_save_text(url, file_name):
         paragraphs = soup.find_all('p')
         article_text = "\n".join([p.get_text() for p in paragraphs])
         
-        with open(os.path.join(TEXT_DIR, file_name), 'w', encoding='utf-8') as f:
+        file_path = os.path.join(TEXT_DIR, file_name)
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(f"{title}\n---\n{article_text}")
+        print(f"File saved successfully: {file_path}")  # Confirm file saving
     except requests.RequestException as e:
         print(f"Failed to scrape {url}: {e}")
     except Exception as e:
         print(f"An error occurred while processing {url}: {e}")
+
 
 @app.route('/')
 def index():

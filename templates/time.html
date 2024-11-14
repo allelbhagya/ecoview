@@ -82,14 +82,15 @@
             <h2>Articles from {{ year_filter }}</h2>
             
             {% if articles_by_year %}
-                <div class="word-cloud">
-                    {% for word, frequency in top_words_phrases %}
-                    <a href="{{ url_for('search_word', word=word) }}" 
-                       style="font-size: {{(frequency * 1.2 ) * 0.4}}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
-                        {{ word }}
-                    </a>
-                    {% endfor %}
-                </div>
+            <div class="word-cloud">
+                {% for word, font_size in top_words_phrases %}
+                <a href="{{ url_for('search_word', word=word) }}" 
+                   style="font-size: {{ font_size }}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
+                    {{ word }}
+                </a>
+                {% endfor %}
+            </div>
+            
             {% else %}
                 <p class="no-results">No articles found for the year {{ year_filter }}.</p>
             {% endif %}

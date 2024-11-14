@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, request
 import os
 import csv
 import re
@@ -41,8 +41,6 @@ def index():
     
     return render_template('index.html', articles=articles, top_words_phrases=top_words_phrases)
 
-from flask import request
-
 @app.route('/time')
 def articles_by_year():
     year_filter = request.args.get('year', '').strip()
@@ -62,8 +60,17 @@ def articles_by_year():
         if articles_by_year:
             combined_text = ' '.join(articles_by_year)
             top_words_phrases = get_top_words_and_phrases_from_text(combined_text)
+
+            if top_words_phrases:
+                max_frequency = max(frequency for _, frequency in top_words_phrases)
+                max_font_size =75
+                top_words_phrases = [
+                    (word, int((frequency / max_frequency) * max_font_size))
+                    for word, frequency in top_words_phrases
+                ]
     
     return render_template('time.html', year_filter=year_filter, articles_by_year=articles_by_year, top_words_phrases=top_words_phrases)
+
 
 def get_top_words_and_phrases_from_text(text, n=30):
     text = re.sub(r'[^A-Za-z\s]', '', text)

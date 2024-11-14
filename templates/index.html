@@ -47,7 +47,7 @@
         <div class="word-cloud">
             {% for word, frequency in top_words_phrases %}
             <a href="{{ url_for('search_word', word=word) }}" 
-               style="font-size: {{(frequency * 1.2 )*0.5}}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
+               style="font-size: {{(frequency * 1.2 )*0.4}}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
                 {{ word }}
             </a>
             {% endfor %}

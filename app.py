@@ -1,24 +1,45 @@
 from flask import Flask, render_template, abort
 import os
 import csv
-import requests
-from bs4 import BeautifulSoup
+import re
 from collections import Counter
-import nltk
 from nltk.corpus import stopwords
 from nltk import ngrams
-import re
+import nltk
 
 app = Flask(__name__)
 
-TEXT_DIR = 'text'
+TEXT_DIR = 'delhi'
 os.makedirs(TEXT_DIR, exist_ok=True)
 
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
 
-custom_stop_words = {"would", "use", "should", "could","also"}
+custom_stop_words = {"would", "use", "should", "could", "also", "news", "said", "live", "latest", "us", "around", "get", "people", "track", "new", "updates", "news live", "follow", "track latest", "latest news", "watch", "advertisement", "years", "plan", "songs", "report", "promotedlisten", "states", "year", "one", "two", "even", "since", "per"}
 stop_words.update(custom_stop_words)
+
+@app.route('/')
+def index():
+    articles = []
+    
+    with open('web.csv', 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            url = row['URL']
+            file_name = url.replace('https://', '').replace('http://', '').replace('/', '_') + '.txt'
+            
+            try:
+                with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
+                    title = f.readline().strip()
+                articles.append({'file_name': file_name, 'title': title.replace("Title: ", "")})
+            except FileNotFoundError:
+                print(f"File not found: {file_name}. Skipping this article.")
+            except Exception as e:
+                print(f"Error reading {file_name}: {e}. Skipping this article.")
+    
+    top_words_phrases = get_top_words_and_phrases()
+    
+    return render_template('index.html', articles=articles, top_words_phrases=top_words_phrases)
 
 @app.route('/search/<word>')
 def search_word(word):
@@ -37,70 +58,30 @@ def search_word(word):
 
             if regex_pattern.search(content):
                 matching_articles.append({
-                    'title': title,
+                    'title': title.replace("Title: ", ""),
                     'file_name': filename
                 })
 
     return render_template('search_result.html', word=word, articles=matching_articles)
 
-def scrape_and_save_text(url, file_name):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        title = soup.find('title').get_text() if soup.find('title') else 'No Title'
-        paragraphs = soup.find_all('p')
-        article_text = "\n".join([p.get_text() for p in paragraphs])
-        
-        file_path = os.path.join(TEXT_DIR, file_name)
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(f"{title}\n---\n{article_text}")
-        print(f"File saved successfully: {file_path}")  # Confirm file saving
-    except requests.RequestException as e:
-        print(f"Failed to scrape {url}: {e}")
-    except Exception as e:
-        print(f"An error occurred while processing {url}: {e}")
-
-
-@app.route('/')
-def index():
-    articles = []
-    
-    with open('websites.csv', 'r') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            url = row['URL']
-            file_name = url.replace('https://', '').replace('http://', '').replace('/', '_') + '.txt'
-            
-            if not os.path.exists(os.path.join(TEXT_DIR, file_name)):
-                scrape_and_save_text(url, file_name)
-            
-            with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
-                title = f.readline().strip() 
-            
-            articles.append({'title': title, 'file_name': file_name})
-    
-    top_words_phrases = get_top_words_and_phrases()
-    
-    return render_template('index.html', articles=articles, top_words_phrases=top_words_phrases)
-
 @app.route('/articles')
 def articles():
     articles_list = []
-    with open('websites.csv', 'r') as csvfile:
+    with open('web.csv', 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             url = row['URL']
             file_name = url.replace('https://', '').replace('http://', '').replace('/', '_') + '.txt'
             
-            if not os.path.exists(os.path.join(TEXT_DIR, file_name)):
-                scrape_and_save_text(url, file_name)
-            
-            with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
-                title = f.readline().strip() 
-            
-            articles_list.append({'title': title, 'file_name': file_name})
+            try:
+                with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
+                    title = f.readline().strip()
+                
+                articles_list.append({'file_name': file_name, 'title': title.replace("Title: ", "")})
+            except FileNotFoundError:
+                print(f"File not found: {file_name}. Skipping this article.")
+            except Exception as e:
+                print(f"Error reading {file_name}: {e}. Skipping this article.")
     
     return render_template('articles.html', articles=articles_list)
 
@@ -108,13 +89,14 @@ def articles():
 def article(file_name):
     try:
         with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
-            title = f.readline().strip()
-            f.readline()
-            content = f.read()
+            title = f.readline().strip() 
+            date = f.readline().strip()
+            content = f.read()  
         
-        return render_template('article.html', title=title, content=content)
+        return render_template('article.html', title=title.replace("Title: ", ""), date=date, content=content)
     except FileNotFoundError:
         abort(404)
+
 
 def load_and_process_text():
     combined_text = ""

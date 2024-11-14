@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles by Year</title>
+    <style>
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-size: 1.15em;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .word-cloud {
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .word-cloud a {
+            text-decoration: none;
+            color: #00796b;
+            display: inline-block;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        .word-cloud a:hover {
+            transform: scale(1.1);
+        }
+        nav {
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            text-decoration: none;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            color: rgb(0, 0, 0); 
+            margin: 0 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .year-form {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .no-results {
+            text-align: center;
+            font-size: 1.1em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('articles') }}">All Articles</a>
+        <a href="{{ url_for('articles_by_year') }}">Climate in Time</a>
+    </nav>
+
+    <div class="content-wrapper">
+        <div class="year-form">
+            <form action="{{ url_for('articles_by_year') }}" method="get">
+                <label for="year">Enter Year:</label>
+                <input type="text" id="year" name="year" placeholder="e.g., 2022" value="{{ year_filter }}">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        {% if year_filter %}
+            <h2>Articles from {{ year_filter }}</h2>
+            
+            {% if articles_by_year %}
+                <div class="word-cloud">
+                    {% for word, frequency in top_words_phrases %}
+                    <a href="{{ url_for('search_word', word=word) }}" 
+                       style="font-size: {{(frequency * 1.2 ) * 0.4}}px; color: hsl({{ loop.index * 12 }}, 70%, 40%);">
+                        {{ word }}
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-results">No articles found for the year {{ year_filter }}.</p>
+            {% endif %}
+        {% else %}
+            <p class="no-results">Please enter a year to view articles.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

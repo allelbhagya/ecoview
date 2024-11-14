@@ -41,6 +41,43 @@ def index():
     
     return render_template('index.html', articles=articles, top_words_phrases=top_words_phrases)
 
+from flask import request
+
+@app.route('/time')
+def articles_by_year():
+    year_filter = request.args.get('year', '').strip()
+    articles_by_year = []
+    top_words_phrases = []
+
+    if year_filter.isdigit():
+        for filename in os.listdir(TEXT_DIR):
+            with open(os.path.join(TEXT_DIR, filename), 'r', encoding='utf-8') as f:
+                title = f.readline().strip()
+                date = f.readline().strip()
+                
+                if year_filter in date:
+                    content = f.read().lower()
+                    articles_by_year.append(content)
+
+        if articles_by_year:
+            combined_text = ' '.join(articles_by_year)
+            top_words_phrases = get_top_words_and_phrases_from_text(combined_text)
+    
+    return render_template('time.html', year_filter=year_filter, articles_by_year=articles_by_year, top_words_phrases=top_words_phrases)
+
+def get_top_words_and_phrases_from_text(text, n=30):
+    text = re.sub(r'[^A-Za-z\s]', '', text)
+    words = [word.lower() for word in text.split() if word.lower() not in stop_words and len(word) > 1]
+    word_counts = Counter(words)
+    bigram_counts = Counter(ngrams(words, 2))
+
+    top_single_words = word_counts.most_common(n)
+    top_bigrams = bigram_counts.most_common(n)
+
+    top_words_phrases = [(word, freq) for word, freq in top_single_words] + [(' '.join(bigram), freq) for bigram, freq in top_bigrams]
+    return sorted(top_words_phrases, key=lambda x: x[1], reverse=True)[:n]
+
+
 @app.route('/search/<word>')
 def search_word(word):
     word = word.lower()

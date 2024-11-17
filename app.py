@@ -129,17 +129,67 @@ def articles():
     
     return render_template('articles.html', articles=articles_list)
 
+import math
+import re
+
+
+def compute_tf(text):
+    words = re.sub(r'[^A-Za-z\s]', '', text).lower().split()
+    word_count = Counter(words)
+    total_words = len(words)
+    tf_scores = {word: count / total_words for word, count in word_count.items()}
+    return tf_scores
+
+def compute_idf(all_texts):
+    num_documents = len(all_texts)
+    word_document_count = Counter()
+
+    for text in all_texts:
+        words = set(re.sub(r'[^A-Za-z\s]', '', text).lower().split())
+        for word in words:
+            word_document_count[word] += 1
+    
+    idf_scores = {}
+    for word, doc_count in word_document_count.items():
+        idf_scores[word] = math.log(num_documents / (1 + doc_count)) + 1
+    return idf_scores
+
+def compute_tfidf(text, idf_scores):
+    tf_scores = compute_tf(text)
+    tfidf_scores = {word: tf * idf_scores.get(word, 0) for word, tf in tf_scores.items()}
+    return tfidf_scores
+
+def get_top_sentences(text, n=3):
+    sentences = re.split(r'(?<=[.!?]) +', text.strip()) 
+    all_texts = [sentence for sentence in sentences] 
+    idf_scores = compute_idf(all_texts)
+
+    sentence_scores = []
+    for sentence in sentences:
+        tfidf_scores = compute_tfidf(sentence, idf_scores)
+        sentence_score = sum(tfidf_scores.values())
+        sentence_scores.append((sentence, sentence_score))
+
+    sorted_sentences = sorted(sentence_scores, key=lambda x: x[1], reverse=True)
+    top_sentences = [sentence for sentence, _ in sorted_sentences[:n]]
+    
+    return ' '.join(top_sentences)
+
+
 @app.route('/article/<file_name>')
 def article(file_name):
     try:
         with open(os.path.join(TEXT_DIR, file_name), 'r', encoding='utf-8') as f:
             title = f.readline().strip() 
             date = f.readline().strip()
-            content = f.read()  
+            content = f.read()
         
-        return render_template('article.html', title=title.replace("Title: ", ""), date=date, content=content)
+        summary = get_top_sentences(content, n=6)
+        
+        return render_template('article.html', title=title.replace("Title: ", ""), date=date, content=content, summary=summary)
     except FileNotFoundError:
         abort(404)
+
 
 
 def load_and_process_text():

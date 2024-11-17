@@ -48,6 +48,23 @@ nav a {
     font-weight: bold;
     font-size: 1.2em;
 }
+.summary-box {
+    background-color: #ffffff;
+    border: 2px solid #0056b3;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.summary-box p {
+    font-size: 16px;
+    color: #333;
+}
+
+.summary-box h3{
+    text-align: center;
+}
 
     </style>
 </head>
@@ -58,6 +75,11 @@ nav a {
         <a href="{{ url_for('articles_by_year') }}">Climate in Time</a>
     </nav>
     <div class="content-wrapper">
+        <div class="summary-box">
+            <h3>Summary</h3>
+            <p>{{ summary }}</p> 
+        </div>
+
         <h1>{{ title }}</h1>
         <p><strong>{{ date }}</strong> </p>
         <pre>{{ content }}</pre>
